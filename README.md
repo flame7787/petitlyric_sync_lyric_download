@@ -1,5 +1,5 @@
 # petitlyric_sync_lyric_download
-Download sync lyric from petitlyric as lrc files
+Download sync lyric from petitlyric as lrc/txt files
 
 This applet downloads sync lyric from petitlyric(プチリリ), and store them locally as lrc files. 
 The lyric searching is based on the METADATA of the audio files, namely the artist name, track title, and album title. 
