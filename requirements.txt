@@ -1,3 +1,4 @@
 numpy==1.26.4
 requests==2.25.1
 tinytag==1.6.0
+colorama==0.4.6

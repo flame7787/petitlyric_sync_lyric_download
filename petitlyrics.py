@@ -1,6 +1,8 @@
 import requests
 import os
 import codecs
+from colorama import just_fix_windows_console
+just_fix_windows_console()
 
 request_body_partial = {
     'lyricsType': '3',
