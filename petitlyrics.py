@@ -28,9 +28,10 @@ def find_lyric_folder(directory):
                 filename_bare = filename[:-5]
             else:
                 continue
+            print('\nGoing to next file...')
             print(filename_bare)
             if os.path.isfile(os.path.join(root_dir,filename_bare+'.lrc')):
-                print('lyric file already exists.')
+                print('\033[33m' + 'lyric file already exists.' + '\033[0m')
                 continue
             try:
                 lyric_string = find_lyric(os.path.join(root_dir,filename))
@@ -39,7 +40,7 @@ def find_lyric_folder(directory):
                     fout.write(lyric_string)
                     fout.close()
             except:
-                print('other error: ')
+                print('\033[31m' + 'other error: ' + '\033[0m')
                 continue
     return
 def ms2mmss(ms):
@@ -66,7 +67,7 @@ def get_lyric_base64(album,artist,title,lyricsType_request = 3):
         elif lyricsType_request == 1:
             assert lyrics_type == '1'
     except AssertionError:
-        print('lyric type not currently supported')
+        print('\033[31m' + 'lyric type not currently supported' + '\033[0m')
         return [0,'']
     except AttributeError:
         print('lyric not found')
@@ -85,27 +86,26 @@ def find_lyric(path_to_music_file):
     artist = tag.artist
     title = tag.title
     [lyrics_type,lyrics_base64] = get_lyric_base64(album,artist,title,3)
-    
     if lyrics_type == '2':
         [lyrics_type,lyrics_text_base64] = get_lyric_base64(album,artist,title,1)
-        print('lyric added from line sync source')
+        print('\033[32m' + 'type 2 lyric added from line sync source' + '\033[0m')
         return lsy_decoder(lyrics_base64,lyrics_text_base64)
     elif lyrics_type == '3':
         lyrics_petitlyricform = base64.b64decode(lyrics_base64).decode("UTF-8")
         lyrics_tree = ET.fromstring(lyrics_petitlyricform)
-        lyric_string = '[00:00.00] (petitlyric_wsy)\n'
+        lyric_string = '[00:00.00] \n'
         for line in lyrics_tree.findall('line'):
             timepoint = line.find('word').find('starttime').text
             lyric_line = line.find('linestring').text
             if lyric_line is None:
                 lyric_line = ''
             lyric_string += ms2mmss(timepoint) + ' ' + lyric_line +'\n'
-        print('lyric added from word sync source')
+        print('\033[32m' + 'type 3 lyric added from word sync source' + '\033[0m')
         return lyric_string
     return ''
 def convert_to_filename(titletext):
     import re
-    return re.sub('[^\w_.)( -]', '',titletext)
+    return re.sub(r'[^\w_.)( -]', '',titletext)
 def lsy_decoder(lsy_base64_lyric,lyrics_text_base64):#Assumes running on little endian system
     import binascii
     import struct
@@ -114,7 +114,7 @@ def lsy_decoder(lsy_base64_lyric,lyrics_text_base64):#Assumes running on little 
     import io
     lyric_unsynced = base64.b64decode(lyrics_text_base64).decode("UTF-8")
     lyric_line_reader = io.StringIO(lyric_unsynced)
-    lyric_string = '[00:00.00] (petitlyric_lsy)\n'
+    lyric_string = '[00:00.00] \n'
     lyrics_encrypted = base64.b64decode(lsy_base64_lyric)
     protection_id = np.uint16(int.from_bytes(lyrics_encrypted[0x1a:0x1a+2],byteorder='little',signed=False))
     protection_key_switch_flag = bool(lyrics_encrypted[0x19])
@@ -148,7 +148,7 @@ def lsy_decoder(lsy_base64_lyric,lyrics_text_base64):#Assumes running on little 
     return lyric_string
 
 def main():
-    find_lyric_folder('Y:\media\Music\THE IDOLM@STER CG\STARLIGHT MASTER')
+    find_lyric_folder('Y:/media/Music/THE IDOLM@STER CG/STARLIGHT MASTER')
 
 if __name__ == '__main__':
     main()
