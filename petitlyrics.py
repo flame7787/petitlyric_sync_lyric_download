@@ -1,4 +1,7 @@
 import requests
+import os
+import codecs
+
 request_body_partial = {
     'lyricsType': '3',
     'sdkVer': '1.3.4',
@@ -17,9 +20,37 @@ request_header = {
     'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
     'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 5.1.1; LM-G820UM Build/LMY48Z)'
 }
+def find_lyric_file(sel_file):
+    parent_dir = os.path.dirname(sel_file)
+
+    if sel_file.endswith(".m4a") or sel_file.endswith(".mp3") or sel_file.endswith(".wma"):
+        filename_bare = sel_file[:-4]
+    elif sel_file.endswith(".flac"):
+        filename_bare = sel_file[:-5]
+    else:
+        return
+    print('\nSingle file mode:')
+    print(filename_bare)
+    if os.path.isfile(os.path.join(parent_dir,filename_bare + '.lrc')) or os.path.isfile(os.path.join(parent_dir,filename_bare + '.txt')):
+        print('\033[33m' + 'lyric file already exists.' + '\033[0m')
+        return
+    try:
+        lyrics_type, lyric_string = find_lyric(os.path.join(parent_dir,sel_file))
+        if lyric_string != '':
+            if lyrics_type == '1':
+                fout = codecs.open(os.path.join(parent_dir,filename_bare+'.txt'),'w','utf-8')
+            elif lyrics_type == '2' or lyrics_type == '3':
+                fout = codecs.open(os.path.join(parent_dir,filename_bare+'.lrc'),'w','utf-8')
+            else:
+                raise ValueError('Unknown lyric type: ' + str(lyrics_type))
+            fout.write(lyric_string)
+            fout.close()
+    except Exception as e:
+        print('\033[31m' + 'other error: ' + str(e) + '\033[0m')
+        return
+    return
+    
 def find_lyric_folder(directory):
-    import os
-    import codecs
     for (root_dir,sub_dir,filenames) in os.walk(directory):
         for filename in filenames:
             if filename.endswith(".m4a") or filename.endswith(".mp3") or filename.endswith(".wma"):
