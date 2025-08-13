@@ -83,7 +83,6 @@ def find_lyric(path_to_music_file):
     album = tag.album
     artist = tag.artist
     title = tag.title
-    #error here
     [lyrics_type,lyrics_base64] = get_lyric_base64(album,artist,title,3)
     if lyrics_type == '1':
         [lyrics_type,lyrics_text_base64] = get_lyric_base64(album,artist,title,1)
