@@ -30,13 +30,16 @@ def find_lyric_folder(directory):
                 continue
             print('\nGoing to next file...')
             print(filename_bare)
-            if os.path.isfile(os.path.join(root_dir,filename_bare+'.lrc')):
+            if os.path.isfile(os.path.join(root_dir,filename_bare + '.lrc')) or os.path.isfile(os.path.join(root_dir,filename_bare + '.txt')):
                 print('\033[33m' + 'lyric file already exists.' + '\033[0m')
                 continue
             try:
-                lyric_string = find_lyric(os.path.join(root_dir,filename))
+                lyrics_type, lyric_string = find_lyric(os.path.join(root_dir,filename))
                 if lyric_string != '':
-                    fout = codecs.open(os.path.join(root_dir,filename_bare+'.lrc'),'w','utf-8')
+                    if lyrics_type == '1':
+                        fout = codecs.open(os.path.join(root_dir,filename_bare+'.txt'),'w','utf-8')
+                    else:
+                        fout = codecs.open(os.path.join(root_dir,filename_bare+'.lrc'),'w','utf-8')
                     fout.write(lyric_string)
                     fout.close()
             except:
@@ -63,12 +66,7 @@ def get_lyric_base64(album,artist,title,lyricsType_request = 3):
         lyrics_type = song_xml_tree.find('songs').find('song').find('lyricsType').text
         lyrics_base64 = song_xml_tree.find('songs').find('song').find('lyricsData').text
         if lyricsType_request == 3:
-            assert lyrics_type == '3' or lyrics_type == '2'
-        elif lyricsType_request == 1:
-            assert lyrics_type == '1'
-    except AssertionError:
-        print('\033[31m' + 'lyric type not currently supported' + '\033[0m')
-        return [0,'']
+            assert lyrics_type == '3' or lyrics_type == '2' or lyrics_type == '1'
     except AttributeError:
         print('lyric not found')
         return [0,'']
@@ -81,15 +79,20 @@ def find_lyric(path_to_music_file):
         tag = ttag.get(path_to_music_file)
     except:
         print('Tag read error')
-        return ''
+        return 0, ''
     album = tag.album
     artist = tag.artist
     title = tag.title
+    #error here
     [lyrics_type,lyrics_base64] = get_lyric_base64(album,artist,title,3)
-    if lyrics_type == '2':
+    if lyrics_type == '1':
+        [lyrics_type,lyrics_text_base64] = get_lyric_base64(album,artist,title,1)
+        print('\033[32m' + 'type 1 lyric added from line sync source' + '\033[0m')
+        return lyrics_type, base64.b64decode(lyrics_text_base64).decode("UTF-8")
+    elif lyrics_type == '2':
         [lyrics_type,lyrics_text_base64] = get_lyric_base64(album,artist,title,1)
         print('\033[32m' + 'type 2 lyric added from line sync source' + '\033[0m')
-        return lsy_decoder(lyrics_base64,lyrics_text_base64)
+        return lyrics_type, lsy_decoder(lyrics_base64,lyrics_text_base64)
     elif lyrics_type == '3':
         lyrics_petitlyricform = base64.b64decode(lyrics_base64).decode("UTF-8")
         lyrics_tree = ET.fromstring(lyrics_petitlyricform)
@@ -101,8 +104,8 @@ def find_lyric(path_to_music_file):
                 lyric_line = ''
             lyric_string += ms2mmss(timepoint) + ' ' + lyric_line +'\n'
         print('\033[32m' + 'type 3 lyric added from word sync source' + '\033[0m')
-        return lyric_string
-    return ''
+        return lyrics_type, lyric_string
+    return 0, ''
 def convert_to_filename(titletext):
     import re
     return re.sub(r'[^\w_.)( -]', '',titletext)
