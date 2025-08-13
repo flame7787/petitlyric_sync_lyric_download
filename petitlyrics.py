@@ -38,12 +38,14 @@ def find_lyric_folder(directory):
                 if lyric_string != '':
                     if lyrics_type == '1':
                         fout = codecs.open(os.path.join(root_dir,filename_bare+'.txt'),'w','utf-8')
-                    else:
+                    elif lyrics_type == '2' or lyrics_type == '3':
                         fout = codecs.open(os.path.join(root_dir,filename_bare+'.lrc'),'w','utf-8')
+                    else:
+                        raise ValueError('Unknown lyric type: ' + str(lyrics_type))
                     fout.write(lyric_string)
                     fout.close()
-            except:
-                print('\033[31m' + 'other error: ' + '\033[0m')
+            except Exception as e:
+                print('\033[31m' + 'other error: ' + str(e) + '\033[0m')
                 continue
     return
 def ms2mmss(ms):
@@ -87,11 +89,11 @@ def find_lyric(path_to_music_file):
     if lyrics_type == '1':
         [lyrics_type,lyrics_text_base64] = get_lyric_base64(album,artist,title,1)
         print('\033[32m' + 'type 1 lyric added from line sync source' + '\033[0m')
-        return lyrics_type, base64.b64decode(lyrics_text_base64).decode("UTF-8")
+        return '1', base64.b64decode(lyrics_text_base64).decode("UTF-8")
     elif lyrics_type == '2':
         [lyrics_type,lyrics_text_base64] = get_lyric_base64(album,artist,title,1)
         print('\033[32m' + 'type 2 lyric added from line sync source' + '\033[0m')
-        return lyrics_type, lsy_decoder(lyrics_base64,lyrics_text_base64)
+        return '2', lsy_decoder(lyrics_base64,lyrics_text_base64)
     elif lyrics_type == '3':
         lyrics_petitlyricform = base64.b64decode(lyrics_base64).decode("UTF-8")
         lyrics_tree = ET.fromstring(lyrics_petitlyricform)
@@ -103,7 +105,7 @@ def find_lyric(path_to_music_file):
                 lyric_line = ''
             lyric_string += ms2mmss(timepoint) + ' ' + lyric_line +'\n'
         print('\033[32m' + 'type 3 lyric added from word sync source' + '\033[0m')
-        return lyrics_type, lyric_string
+        return '3', lyric_string
     return 0, ''
 def convert_to_filename(titletext):
     import re
